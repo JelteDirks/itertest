@@ -29,6 +29,21 @@ where Iter: Iterator<Item = &'a u8>,
     }
 }
 
+trait LineBoundariesExt<'a> : Sized
+where Self: Iterator<Item = &'a u8>,
+{
+    fn line_boundaries(self) -> LineBoundaries<'a, Self>; 
+}
+
+impl<'a, Iter> LineBoundariesExt<'a> for Iter 
+where Iter: Iterator<Item = &'a u8>
+{
+    fn line_boundaries(self) -> LineBoundaries<'a, Self> {
+        LineBoundaries::new(self)
+    }
+}
+
+
 impl<'a, Iter> Iterator for LineBoundaries<'a, Iter> 
 where Iter: Iterator<Item = &'a u8>
 {
@@ -87,14 +102,11 @@ fn main() {
         println!("{}", String::from_utf8(byte_slice[boundaries.0..boundaries.1].to_vec()).unwrap());
     }
 
-    let xx = vec![0x65,0x64,0x4C];
+    let iterme: &[u8] = SOME_VALUE.as_bytes();
 
-    let lb2 = LineBoundaries::new(xx.iter());
-
-    for boundaries in lb2 {
+    for boundaries in iterme.iter().line_boundaries() {
         println!("{:?}", boundaries);
-        println!("{}", String::from_utf8(xx[boundaries.0..boundaries.1].to_vec()).unwrap());
+        println!("{}", String::from_utf8(iterme[boundaries.0..boundaries.1].to_vec()).unwrap());
     }
 
-    // xx.iter().line_boundaries();
 }
