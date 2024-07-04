@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+X-Powered-By: Express
+Content-Type: application/octet-stream
+Content-Length: 25
+ETag: W/"19-B8zw7OXzcTA2cl4FfElEEwnpEvE"
+Date: Thu, 04 Jul 2024 10:48:41 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+
+This is some binary data.

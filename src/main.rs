@@ -1,5 +1,7 @@
 use std::io::Read;
 
+mod decoder;
+
 struct LineBoundaries<'a, Iter>
 where Iter: Iterator<Item = &'a u8>
 {
@@ -99,13 +101,12 @@ where Iter: Iterator<Item = (usize, usize)>
 impl<'a, Iter> Iterator for HeaderDecoder<'a, Iter>
     where Iter: Iterator<Item = (usize, usize)>
 {
-    type Item = String;
+    type Item = Option<decoder::HttpHeaderPair>;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next() {
             Some(pair) => {
-                // WARNING: buf can be different than source of pairs!
-                return Some(String::from_utf8(self.buf[pair.0..pair.1].to_vec()).unwrap());
+                return Some(decoder::decode_header(self.buf, pair.0, pair.1));
             }
             None => None
         }
@@ -130,7 +131,7 @@ fn main() {
 
     let mut buf: Vec<u8> = Vec::new();
 
-    let file = std::fs::File::open("small_file.txt").expect("file not found");
+    let file = std::fs::File::open("response_example.txt").expect("file not found");
     let mut bufreader = std::io::BufReader::new(file);
     bufreader.read_to_end(&mut buf).expect("file read error");
 
@@ -139,16 +140,18 @@ fn main() {
     // === TIME START ===
     let t1_start = std::time::Instant::now();
     for boundaries in LineBoundaries::new(bytes.iter()) {
-        let s = String::from_utf8(bytes[boundaries.0..boundaries.1].to_vec()).unwrap();
-        std::hint::black_box(s);
+        let h = decoder::decode_header(bytes, boundaries.0, boundaries.1);
+        println!("{:?}", h);
+        std::hint::black_box(h);
     }
     let t1_end = std::time::Instant::now();
     // === TIME END ===
 
     // === TIME START ===
     let t2_start = std::time::Instant::now();
-    bytes.iter().line_boundaries().decode_headers(bytes).for_each(|s| {
-        std::hint::black_box(s);
+    bytes.iter().line_boundaries().decode_headers(bytes).for_each(|h| {
+        println!("{:?}", h);
+        std::hint::black_box(h);
     });
     let t2_end = std::time::Instant::now();
     // === TIME END ===
