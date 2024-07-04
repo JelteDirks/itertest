@@ -130,7 +130,7 @@ fn main() {
 
     let mut buf: Vec<u8> = Vec::new();
 
-    let file = std::fs::File::open("very_large_file.txt").expect("file not found");
+    let file = std::fs::File::open("small_file.txt").expect("file not found");
     let mut bufreader = std::io::BufReader::new(file);
     bufreader.read_to_end(&mut buf).expect("file read error");
 
@@ -156,22 +156,22 @@ fn main() {
     let t1 = t1_end - t1_start;
     let t2 = t2_end - t2_start;
 
-    println!("{},{}", t1.as_micros(), t2.as_micros());
+    println!("{},{}", t1.as_nanos(), t2.as_nanos());
 }
 
-// Based on 87943 runs in release.
-// file is 1560090B (~1.5MB)
+// Based on 100K runs in release.
+// file is 1401B
 //
 // loop1
-// mean: 1664.7277
-// std: 30.5821
-// median: 1664
-// min: 1598
-// max: 3923
-//
+// mean: 2562.6554
+// std: 641.872
+// median: 2500
+// min: 2291
+// max: 20583
 // loop2
-// mean: 1654.8945
-// std: 29.1647
-// median: 1654
-// min: 1592
-// max: 3465
+//
+// mean: 1941.8528
+// std: 577.8965
+// median: 1875
+// min: 1667
+// max: 20458
