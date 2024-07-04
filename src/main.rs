@@ -158,3 +158,19 @@ fn main() {
 
     println!("{},{}", t1.as_nanos(), t2.as_nanos());
 }
+
+// Based on 66703 runs in --release mode:
+//
+// loop1
+// mean: 1163.036
+// std: 337.652
+// median: 1125
+// min: 917
+// max: 35208
+//
+// loop2
+// mean: 592.1229
+// std: 216.222
+// median: 583
+// min: 458
+// max: 14916
