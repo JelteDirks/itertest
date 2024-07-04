@@ -1,15 +1,4 @@
-const SOME_VALUE: &str = r#"HTTP/1.1 200 OK
-X-Powered-By: Express
-Content-Type: application/octet-stream
-Content-Length: 25
-ETag: W/"19-B8zw7OXzcTA2cl4FfElEEwnpEvE"
-Date: Wed, 03 Jul 2024 18:58:33 GMT
-Connection: keep-alive
-Keep-Alive: timeout=5
-
-This is some binary data.
-"#;
-
+use std::io::Read;
 
 struct LineBoundaries<'a, Iter>
 where Iter: Iterator<Item = &'a u8>
@@ -138,40 +127,51 @@ where Iter: Iterator<Item = (usize, usize)>,
 }
 
 fn main() {
-    let bytes = SOME_VALUE.as_bytes();
+
+    let mut buf: Vec<u8> = Vec::new();
+
+    let file = std::fs::File::open("very_large_file.txt").expect("file not found");
+    let mut bufreader = std::io::BufReader::new(file);
+    bufreader.read_to_end(&mut buf).expect("file read error");
+
+    let bytes: &[u8] = &buf;
 
     // === TIME START ===
-    let t_start = std::time::Instant::now();
-    for boundaries in LineBoundaries::new(SOME_VALUE.as_bytes().iter()) {
+    let t1_start = std::time::Instant::now();
+    for boundaries in LineBoundaries::new(bytes.iter()) {
         let s = String::from_utf8(bytes[boundaries.0..boundaries.1].to_vec()).unwrap();
         std::hint::black_box(s);
     }
-    let t1 = std::time::Instant::now() - t_start;
+    let t1_end = std::time::Instant::now();
     // === TIME END ===
 
     // === TIME START ===
-    let t_start = std::time::Instant::now();
-    SOME_VALUE.as_bytes().iter().line_boundaries().decode_headers(bytes).for_each(|s| {
+    let t2_start = std::time::Instant::now();
+    bytes.iter().line_boundaries().decode_headers(bytes).for_each(|s| {
         std::hint::black_box(s);
     });
-    let t2 = std::time::Instant::now() - t_start;
+    let t2_end = std::time::Instant::now();
     // === TIME END ===
 
-    println!("{},{}", t1.as_nanos(), t2.as_nanos());
+    let t1 = t1_end - t1_start;
+    let t2 = t2_end - t2_start;
+
+    println!("{},{}", t1.as_micros(), t2.as_micros());
 }
 
-// Based on 66703 runs in --release mode:
+// Based on 87943 runs in release.
+// file is 1560090B (~1.5MB)
 //
 // loop1
-// mean: 1163.036
-// std: 337.652
-// median: 1125
-// min: 917
-// max: 35208
+// mean: 1664.7277
+// std: 30.5821
+// median: 1664
+// min: 1598
+// max: 3923
 //
 // loop2
-// mean: 592.1229
-// std: 216.222
-// median: 583
-// min: 458
-// max: 14916
+// mean: 1654.8945
+// std: 29.1647
+// median: 1654
+// min: 1592
+// max: 3465
