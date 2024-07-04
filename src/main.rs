@@ -115,6 +115,7 @@ impl<'a, Iter> Iterator for HeaderDecoder<'a, Iter>
     fn next(&mut self) -> Option<Self::Item> {
         match self.iter.next() {
             Some(pair) => {
+                // WARNING: buf can be different than source of pairs!
                 return Some(String::from_utf8(self.buf[pair.0..pair.1].to_vec()).unwrap());
             }
             None => None
