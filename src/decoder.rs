@@ -1,3 +1,128 @@
+pub struct LineBoundaries<'a, Iter>
+where Iter: Iterator<Item = &'a u8>
+{
+    cursor: usize,
+    iter: Iter
+}
+
+impl<'a, Iter> LineBoundaries<'a, Iter> 
+where Iter: Iterator<Item = &'a u8>,
+{
+    pub fn new(i: Iter) -> Self {
+        LineBoundaries {
+            cursor: 0,
+            iter: i
+        }
+    }
+}
+
+pub trait LineBoundariesExt<'a> : Sized
+where Self: Iterator<Item = &'a u8>,
+{
+    fn line_boundaries(self) -> LineBoundaries<'a, Self>; 
+}
+
+impl<'a, Iter> LineBoundariesExt<'a> for Iter 
+where Iter: Iterator<Item = &'a u8>
+{
+    fn line_boundaries(self) -> LineBoundaries<'a, Self> {
+        LineBoundaries::new(self)
+    }
+}
+
+
+impl<'a, Iter> Iterator for LineBoundaries<'a, Iter> 
+where Iter: Iterator<Item = &'a u8>
+{
+    type Item = (usize, usize);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let start = self.cursor;
+        let mut _previous: &u8 = &0;
+
+        match self.iter.next() {
+            Some(n) => {
+                if *n == b'\n' {
+                    self.cursor += 1;
+                    return Some((self.cursor-1, self.cursor-1));
+                }
+                _previous = n;
+                self.cursor += 1;
+            }
+            None => return None
+        }
+
+        loop {
+            match self.iter.next() {
+                Some(n) => {
+                    if *n == b'\n' {
+                        break;
+                    }
+                    _previous = n;
+                    self.cursor += 1;
+                }
+                None => {
+                    return Some((start, self.cursor))
+                }
+            }
+        }
+
+        let end = if *_previous == b'\r' {
+            self.cursor - 1
+        } else {
+            self.cursor
+        };
+
+        self.cursor += 1;
+
+        return Some((start, end));
+    }
+}
+
+pub struct HeaderDecoder<'a, Iter>
+where Iter: Iterator<Item = (usize, usize)>
+{
+    iter: Iter,
+    buf: &'a [u8],
+}
+
+impl<'a, Iter> HeaderDecoder<'a, Iter>
+where Iter: Iterator<Item = (usize, usize)>
+{
+    fn new(i: Iter, buf: &'a [u8]) -> Self {
+        HeaderDecoder { iter: i, buf }
+    }
+}
+
+impl<'a, Iter> Iterator for HeaderDecoder<'a, Iter>
+    where Iter: Iterator<Item = (usize, usize)>
+{
+    type Item = Option<HttpHeaderPair>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.iter.next() {
+            Some(pair) => {
+                return Some(decode_header(self.buf, pair.0, pair.1));
+            }
+            None => None
+        }
+    }
+}
+
+pub trait HeaderDecoderExt<'a>: Sized
+where Self: Iterator<Item = (usize, usize)>
+{
+    fn decode_headers(self, buf: &'a [u8]) -> HeaderDecoder<'a, Self>;
+}
+
+impl <'a, Iter> HeaderDecoderExt<'a> for Iter
+where Iter: Iterator<Item = (usize, usize)>,
+{
+    fn decode_headers(self, buf: &'a [u8]) -> HeaderDecoder<'a, Self> {
+        HeaderDecoder::new(self, buf)
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum HttpHeader {
     Accept,
