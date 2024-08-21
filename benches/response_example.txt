@@ -1,10 +1,13 @@
-HTTP/1.1 200 OK
-X-Powered-By: Express
-Content-Type: application/octet-stream
-Content-Length: 25
-ETag: W/"19-B8zw7OXzcTA2cl4FfElEEwnpEvE"
-Date: Thu, 04 Jul 2024 10:48:41 GMT
-Connection: keep-alive
-Keep-Alive: timeout=5
-
-This is some binary data.
+Date: Mon, 12 Aug 2024 12:29:48 GMT
+Server: Apache/2.4.41 (Ubuntu)
+Last-Modified: Mon, 12 Aug 2024 10:00:00 GMT
+ETag: "5d8c72a5-3e8"
+Accept-Ranges: bytes
+Content-Length: 1000
+Vary: Accept-Encoding
+Content-Type: text/html; charset=UTF-8
+Connection: close
+Content-Length: 1000
+Vary: Accept-Encoding
+Content-Type: text/html; charset=UTF-8
+Connection: close
